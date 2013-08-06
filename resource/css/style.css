@@ -1,0 +1,28 @@
+*{padding:0;margin:0;}
+html,body{
+	width:100%;
+	height:100%;
+}
+.scroller
+{
+	width:20px;
+	height:100%;
+	background-color: #e4e4e4;
+}
+.scrollerhandle
+{
+	width:20px;
+	height:20px;
+	background-color: #666;
+}
+#parallaxHolder
+{
+	height:400%;
+	background-color: #f00;
+}
+#parallaxHolder div
+{
+	width:100%;
+	height:25%;
+	background-color: #e4e4e4;
+}
