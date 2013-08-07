@@ -23,7 +23,8 @@ var SuperScroller = function() {
 	_.children = [];
 	_.holderTop = 0;
 	_.totalHeight = 0;
-	_.scrollDirection = 0;
+	_.scrollDirection = "DOWN";
+	_.stickyCurrentHeight=0;
 	// _.startTime = 0;
 	// _.frameRate = 0.016;
 	_.init = function(holder) {
@@ -113,6 +114,7 @@ var SuperScroller = function() {
 		var delta = event.detail ? event.detail * (-120) : event.wheelDelta//check for detail first so Opera uses that instead of wheelDelta
 		this.previousScrollPosition = this.scrollPosition;
 		this.scrollPosition -= delta > 0 ? 10 : -10;
+		this.setScrollDirection();
 		this.checkScrollPosition();
 		this.moveHandle();
 		this.moveHolder();
@@ -124,6 +126,7 @@ var SuperScroller = function() {
 	_.scrollerMouseMove = function(event) {
 		this.previousScrollPosition = this.scrollPosition;
 		this.scrollPosition = Utensil.mouseY(document.body, event);
+		this.setScrollDirection();
 		this.checkScrollPosition();
 		this.moveHandle();
 
@@ -150,37 +153,76 @@ var SuperScroller = function() {
 	}
 	_.moveHolder = function() {
 		//calculate percentage of scroller
-		var diff = (Math.abs(this.previousScrollPosition - this.scrollPosition) / Utensil.stageHeight()) * this.holder.clientHeight;
-		var hTop = this.getScrollPercentage() * this.totalHeight;
-		console.log(hTop);
+		var diff = (Math.abs(this.previousScrollPosition - this.scrollPosition) / Utensil.stageHeight()) * (this.holder.clientHeight);
+		var hTop = this.getScrollPercentage() * (this.totalHeight);
+		
 		if (this.previousScrollPosition > this.scrollPosition)
 			diff = -diff;
 		//var scrollPercentage = this.currentScrollPosition() / Utensil.stageHeight();
 		//this.holder.style.top = -(scrollPercentage * (this.getHolderHeight() - Utensil.stageHeight())) + "px";
 		this.holderTop = hTop;
-		if (this.sticky)
-			return;
-		this.holder.style.top = -(this.getHolderTop() + diff) + "px";
+		if (this.sticky )
+		{
+			this.stickyCurrentHeight+=diff;
+			this.holder.style.top = -(this.currentIndex * Utensil.stageHeight()) + "px";	
+					
+		}else if(this.scrollPosition>=Utensil.stageHeight() - this.scrollhandle.clientHeight)
+		{
+			this.holder.style.top = -((this.children.length-1) * Utensil.stageHeight()) + "px";
+		}else if(this.scrollPosition==0)
+		{
+			this.holder.style.top =0+"px";
+			}else{
+			
+			this.holder.style.top = -(this.getHolderTop() + diff) + "px";			
+		}
+		console.log("holderTop",this.holderTop);
 	}
 	_.checkSticky = function() {
 		var currentItem = this.children[this.currentIndex];
-		console.log(currentItem.getAttribute(this.atts.sticky));
-		if (currentItem.getAttribute(this.atts.sticky)) {
+		
+		if (currentItem.getAttribute(this.atts.sticky) ) {
 			var framerate = Number(currentItem.getAttribute(this.atts.sticky));
 			this.releaseStickyPosition = Number(currentItem.getAttribute(this.atts.top)) + (framerate * currentItem.clientHeight);
-			this.sticky = true;
-			console.log("STICK IS TRUE");
+			
+			console.log(this.getHolderTop(),(this.currentIndex * Utensil.stageHeight()));
+			if(this.scrollDirection=="DOWN" && this.getHolderTop()>=(this.currentIndex * Utensil.stageHeight()))
+			{
+				
+				this.sticky = true;			
+			}else if(this.scrollDirection=="UP" && this.getHolderTop()<=(this.currentIndex * Utensil.stageHeight()))
+			{
+				
+				
+				this.sticky = true;	
+			}
+			
+			
 		} else {
+			
 			this.sticky = false;
-			console.log("STICK IS FALSE")
+			
 		}
 
 		var holderCurrentTop = this.getHolderTop();
-		
-		if (this.holderTop >= this.releaseStickyPosition) {
+		var childTop= Number(currentItem.getAttribute(this.atts.top));
+		if (this.scrollDirection=="DOWN" && this.holderTop >= this.releaseStickyPosition||this.scrollDirection=="UP" && this.holderTop <= childTop) {
+			
+			
 			this.sticky = false;
 		}
+		if(!this.sticky)this.stickyCurrentHeight=0;
 		// if(this.releaseStickyPosition)
+	}
+	_.setScrollDirection =function()
+	{
+		if(this.scrollPosition>=this.previousScrollPosition)
+		{
+			this.scrollDirection="DOWN";
+		}else{
+			this.scrollDirection="UP";
+		}
+		
 	}
 	_.currentScrollPosition = function() {
 		var top = Number(this.scrollhandle.style.top.replace("px", ""));
@@ -188,7 +230,7 @@ var SuperScroller = function() {
 		return top + this.scrollhandle.clientHeight;
 	}
 	_.getScrollPercentage = function() {
-		var top = Number(this.scrollhandle.style.top.replace("px", "")) + this.scrollhandle.clientHeight;
+		var top = Number(this.scrollhandle.style.top.replace("px", "")) ;
 		var scrollPercentage = top / Utensil.stageHeight();
 		return scrollPercentage;
 	}
@@ -216,7 +258,7 @@ var SuperScroller = function() {
 				element.style.height=Utensil.stageHeight()+"px";
 				this.children.push(element);
 
-				previousTop += element.clientHeight + ( stickFrames ? (stickFrames * element.clientHeight) : 0);
+				previousTop += Utensil.stageHeight() + ( stickFrames ? (stickFrames * Utensil.stageHeight()) : 0);
 			}
 		}
 	}
@@ -238,6 +280,7 @@ var SuperScroller = function() {
 			}
 		}
 		this.totalHeight = h;
+		console.log("this.totalHeight",this.totalHeight);
 		return h;
 
 	}
