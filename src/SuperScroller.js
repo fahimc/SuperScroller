@@ -119,9 +119,9 @@ var SuperScroller = function() {
 		this.moveHandle();
 		this.moveHolder();
 
+		this.checkSticky();
 		this.setCurrentIndex();
 		this.getHolderHeight();
-		this.checkSticky();
 	}
 	_.scrollerMouseMove = function(event) {
 		this.previousScrollPosition = this.scrollPosition;
@@ -131,9 +131,9 @@ var SuperScroller = function() {
 		this.moveHandle();
 
 		this.moveHolder();
+		this.checkSticky();
 		this.setCurrentIndex();
 		this.getHolderHeight();
-		this.checkSticky();
 
 	}
 	_.setDuration = function(speed) {
@@ -185,7 +185,7 @@ var SuperScroller = function() {
 			var framerate = Number(currentItem.getAttribute(this.atts.sticky));
 			this.releaseStickyPosition = Number(currentItem.getAttribute(this.atts.top)) + (framerate * currentItem.clientHeight);
 			
-			console.log(this.getHolderTop(),(this.currentIndex * Utensil.stageHeight()));
+			console.log("checkSticky",this.getHolderTop(),(this.currentIndex * Utensil.stageHeight()));
 			if(this.scrollDirection=="DOWN" && this.getHolderTop()>=(this.currentIndex * Utensil.stageHeight()))
 			{
 				
@@ -235,7 +235,7 @@ var SuperScroller = function() {
 		return scrollPercentage;
 	}
 	_.setCurrentIndex = function() {
-
+if(this.sticky)return;
 		for (var a = 0; a < this.children.length; a++) {
 			var element = this.children[a];
 
@@ -261,6 +261,7 @@ var SuperScroller = function() {
 				previousTop += Utensil.stageHeight() + ( stickFrames ? (stickFrames * Utensil.stageHeight()) : 0);
 			}
 		}
+		this.totalHeight = previousTop+Utensil.stageHeight();
 	}
 	_.getHolderTop = function() {
 		var top = Math.abs(this.holder.style.top.replace("px", ""));
@@ -276,10 +277,10 @@ var SuperScroller = function() {
 
 			if (element.getAttribute && element.getAttribute(this.atts.sticky)) {
 				var stickFrames = Number(element.getAttribute(this.atts.sticky));
-				h = h + (stickFrames * element.clientHeight);
+				h = h + (stickFrames * Utensil.stageHeight());
 			}
 		}
-		this.totalHeight = h;
+		//this.totalHeight = h;
 		console.log("this.totalHeight",this.totalHeight);
 		return h;
 
